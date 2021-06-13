@@ -8,3 +8,6 @@
 /httpRequests/
 
 .idea/
+
+# sqlite3 prototyping db
+*.db
