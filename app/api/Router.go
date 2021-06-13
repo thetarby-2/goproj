@@ -5,7 +5,6 @@ import (
 	"goproj2/api/controllers"
 	"goproj2/api/middlewares"
 	"goproj2/db"
-	"net/http"
 )
 
 func SetupRouter() *gin.Engine {
@@ -25,25 +24,21 @@ func SetupRouter() *gin.Engine {
 		})
 	})
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"data": "hello world", "number":3})
-	})
-
 	// Routes
 	r.GET("/users/:id", func(context *gin.Context) {
-		controllers.GetUser(context, &db.UserRepository{DB:db.DB})
+		controllers.GetUser(context, &db.UserRepository{DB: db.DB})
 	})
 	r.GET("/users", func(context *gin.Context) {
-		controllers.ListUsers(context, &db.UserRepository{DB:db.DB})
+		controllers.ListUsers(context, &db.UserRepository{DB: db.DB})
 	})
 	r.PATCH("/users/:id", func(context *gin.Context) {
-		controllers.UpdateUser(context, &db.UserRepository{DB:db.DB})
+		controllers.UpdateUser(context, &db.UserRepository{DB: db.DB})
 	})
 	r.POST("/users", func(context *gin.Context) {
-		controllers.CreateUser(context, &db.UserRepository{DB:db.DB})
+		controllers.CreateUser(context, &db.UserRepository{DB: db.DB})
 	})
 	r.DELETE("/users/:id", func(context *gin.Context) {
-		controllers.DeleteUser(context, &db.UserRepository{DB:db.DB})
+		controllers.DeleteUser(context, &db.UserRepository{DB: db.DB})
 	})
 	return r
 }
