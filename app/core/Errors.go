@@ -37,3 +37,11 @@ type DbConstraintCheckFailed struct {
 func (m *DbConstraintCheckFailed) Error() string {
 	return "Db constraint " + m.Name + " failed"
 }
+
+type ValidationError struct {
+	Err error
+}
+
+func (m *ValidationError) Error() string {
+	return m.Err.Error()
+}

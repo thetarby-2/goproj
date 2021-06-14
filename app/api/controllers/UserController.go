@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"golang.org/x/crypto/bcrypt"
 	. "goproj2/core"
 	"goproj2/db"
 	"goproj2/models"
@@ -12,7 +14,7 @@ import (
 
 type CreateUserInput struct {
 	Name     string `json:"name" binding:"required"`
-	Email    string `json:"email" binding:"required"`
+	Email    string `json:"email" binding:"required" validate:"email"`
 	Password string `json:"password" binding:"required"`
 }
 
@@ -40,6 +42,7 @@ func GetObjectByRepo(repository db.IUserRepository, c *gin.Context, key string, 
 	return nil
 }
 
+// GetUser @Router /users/:id [get]
 func GetUser(c *gin.Context, repository db.IUserRepository) {
 	// Get model if exist
 	var user models.User
@@ -49,6 +52,7 @@ func GetUser(c *gin.Context, repository db.IUserRepository) {
 	c.JSON(http.StatusOK, user.ToUserView())
 }
 
+// CreateUser @Router /users [post]
 func CreateUser(c *gin.Context, repository db.IUserRepository) {
 	// Validate input
 	var input CreateUserInput
@@ -56,11 +60,24 @@ func CreateUser(c *gin.Context, repository db.IUserRepository) {
 		c.AbortWithError(http.StatusBadRequest, &BindError{Err: err})
 		return
 	}
+	validate := validator.New()
+
+	if err := validate.Struct(input); err != nil {
+		c.AbortWithError(http.StatusBadRequest, &ValidationError{Err: err})
+		return
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+
+	if err != nil {
+		c.AbortWithError(400, err)
+		return
+	}
 
 	user := models.User{
 		Name:     input.Name,
 		Email:    input.Email,
-		Password: input.Password,
+		Password: string(passwordHash),
 	}
 
 	if err := repository.Create(&user); err != nil {
@@ -71,6 +88,7 @@ func CreateUser(c *gin.Context, repository db.IUserRepository) {
 	c.JSON(http.StatusOK, user.ToUserView())
 }
 
+// ListUsers @Router /users [get]
 func ListUsers(c *gin.Context, repository db.IUserRepository) {
 	// Get model if exist
 	users, err := repository.GetAll()
@@ -88,6 +106,7 @@ func ListUsers(c *gin.Context, repository db.IUserRepository) {
 	c.JSON(http.StatusOK, userViews)
 }
 
+// UpdateUser @Router /users/:id [patch]
 func UpdateUser(c *gin.Context, repository db.IUserRepository) {
 	// Get model if exist
 	var user models.User
@@ -109,6 +128,7 @@ func UpdateUser(c *gin.Context, repository db.IUserRepository) {
 	c.JSON(http.StatusOK, user.ToUserView())
 }
 
+// DeleteUser @Router /users/:id [delete]
 func DeleteUser(c *gin.Context, repository db.IUserRepository) {
 	// Get model if exist
 	var user models.User

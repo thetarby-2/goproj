@@ -35,5 +35,11 @@ func HandleError() gin.HandlerFunc {
 			c.JSON(c.Writer.Status(), gin.H{"error": err_.Error(), "details": err_.Err.Error()})
 			return
 		}
+		if err_, ok := errors.Cause(err.Err).(*ValidationError); ok {
+			c.JSON(c.Writer.Status(), gin.H{"error": "Validation error", "details": err_.Error()})
+			return
+		}
+		c.JSON(c.Writer.Status(), gin.H{"error": "An unhandled error occurred"})
+		return
 	}
 }
