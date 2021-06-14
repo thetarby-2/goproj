@@ -21,6 +21,7 @@ type UpdateUserInput struct {
 	Password string `json:"password"`
 }
 
+
 // GetObjectByRepo util method for simple crud views
 func GetObjectByRepo(c *gin.Context, key string, repository db.Repository, obj interface{}) error {
 	id, errConvert := strconv.Atoi(c.Param(key))
@@ -37,14 +38,16 @@ func GetObjectByRepo(c *gin.Context, key string, repository db.Repository, obj i
 	return nil
 }
 
+
 func GetUser(c *gin.Context, repository db.Repository) {
 	// Get model if exist
 	var user models.User
 	if err := GetObjectByRepo(c, "id", repository, &user); err != nil {
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, user.ToUserView())
 }
+
 
 func CreateUser(c *gin.Context, repository db.Repository) {
 	// Validate input
@@ -65,8 +68,9 @@ func CreateUser(c *gin.Context, repository db.Repository) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, user.ToUserView())
 }
+
 
 func ListUsers(c *gin.Context, repository db.Repository) {
 	// Get model if exist
@@ -77,8 +81,14 @@ func ListUsers(c *gin.Context, repository db.Repository) {
 		return
 	}
 
-	c.JSON(http.StatusOK, users)
+	var userViews = make([]models.UserView, 0)
+	for _, user := range users {
+		userViews = append(userViews, user.ToUserView())
+	}
+
+	c.JSON(http.StatusOK, userViews)
 }
+
 
 func UpdateUser(c *gin.Context, repository db.Repository) {
 	// Get model if exist
@@ -98,8 +108,9 @@ func UpdateUser(c *gin.Context, repository db.Repository) {
 		// do sth.
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, user.ToUserView())
 }
+
 
 func DeleteUser(c *gin.Context, repository db.Repository) {
 	// Get model if exist
