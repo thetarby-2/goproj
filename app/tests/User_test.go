@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -18,23 +19,6 @@ import (
 type MockUserRepository struct {
 }
 
-func (r *MockUserRepository) GetAll() ([]models.User, error) {
-	return []models.User{}, nil
-}
-
-func (r *MockUserRepository) GetById(id uint, user interface{}) error {
-	if id == 10 {
-		return errors.New("")
-	}
-
-	user = &models.User{
-		Name:     "test",
-		Email:    "test@test.com",
-		Password: "test",
-	}
-	return nil
-}
-
 func (r *MockUserRepository) Update(toUpdate *models.User, update *models.User) error {
 	return nil
 }
@@ -45,6 +29,23 @@ func (r *MockUserRepository) Create(user *models.User) error {
 
 func (r *MockUserRepository) Delete(user *models.User) error {
 	return nil
+}
+
+func (r *MockUserRepository) GetAll() ([]models.User, error) {
+	return nil, nil
+}
+
+func (r *MockUserRepository) GetById(id uint) (models.User, error) {
+	if id == 10 {
+		return models.User{}, errors.New("")
+	}
+
+	user := models.User{
+		Name:     "test_name",
+		Email:    "test@test.com",
+		Password: "test_surname",
+	}
+	return user, nil
 }
 
 func SetupTestRouter() *gin.Engine {
@@ -111,6 +112,18 @@ func TestGetUser_Should_Return_404_When_User_Not_Found(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 404, w.Code)
+}
+
+func TestGetUser_Should_Return_200(t *testing.T) {
+	router := SetupTestRouter()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/users/1", nil)
+	router.ServeHTTP(w, req)
+	var res models.User
+	json.Unmarshal([]byte(w.Body.String()), &res)
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, "test_name", res.Name)
 }
 
 func TestUpdateUser_Should_Return_404_When_User_Not_Found(t *testing.T) {

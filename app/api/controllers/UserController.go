@@ -21,35 +21,35 @@ type UpdateUserInput struct {
 	Password string `json:"password"`
 }
 
-
 // GetObjectByRepo util method for simple crud views
-func GetObjectByRepo(c *gin.Context, key string, repository db.Repository, obj interface{}) error {
+func GetObjectByRepo(repository db.IUserRepository, c *gin.Context, key string, obj interface{}) error {
 	id, errConvert := strconv.Atoi(c.Param(key))
 	if errConvert != nil {
 		c.AbortWithError(http.StatusBadRequest, &ParameterError{ParameterName: "id", Err: errConvert})
 		return errConvert
 	}
 
-	err := repository.GetById(uint(id), obj)
+	res, err := repository.GetById(uint(id))
 	if err != nil {
 		c.AbortWithError(http.StatusNotFound, &ObjectNotFound{ObjectType: reflect.TypeOf(obj), Err: err, Pk: id})
 		return err
 	}
+	va := reflect.ValueOf(res)
+	reflect.ValueOf(obj).Elem().Set(va)
+
 	return nil
 }
 
-
-func GetUser(c *gin.Context, repository db.Repository) {
+func GetUser(c *gin.Context, repository db.IUserRepository) {
 	// Get model if exist
 	var user models.User
-	if err := GetObjectByRepo(c, "id", repository, &user); err != nil {
+	if err := GetObjectByRepo(repository, c, "id", &user); err != nil {
 		return
 	}
 	c.JSON(http.StatusOK, user.ToUserView())
 }
 
-
-func CreateUser(c *gin.Context, repository db.Repository) {
+func CreateUser(c *gin.Context, repository db.IUserRepository) {
 	// Validate input
 	var input CreateUserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -71,8 +71,7 @@ func CreateUser(c *gin.Context, repository db.Repository) {
 	c.JSON(http.StatusOK, user.ToUserView())
 }
 
-
-func ListUsers(c *gin.Context, repository db.Repository) {
+func ListUsers(c *gin.Context, repository db.IUserRepository) {
 	// Get model if exist
 	users, err := repository.GetAll()
 
@@ -89,11 +88,10 @@ func ListUsers(c *gin.Context, repository db.Repository) {
 	c.JSON(http.StatusOK, userViews)
 }
 
-
-func UpdateUser(c *gin.Context, repository db.Repository) {
+func UpdateUser(c *gin.Context, repository db.IUserRepository) {
 	// Get model if exist
 	var user models.User
-	if err := GetObjectByRepo(c, "id", repository, &user); err != nil {
+	if err := GetObjectByRepo(repository, c, "id", &user); err != nil {
 		return
 	}
 
@@ -111,11 +109,10 @@ func UpdateUser(c *gin.Context, repository db.Repository) {
 	c.JSON(http.StatusOK, user.ToUserView())
 }
 
-
-func DeleteUser(c *gin.Context, repository db.Repository) {
+func DeleteUser(c *gin.Context, repository db.IUserRepository) {
 	// Get model if exist
 	var user models.User
-	if err := GetObjectByRepo(c, "id", repository, &user); err != nil {
+	if err := GetObjectByRepo(repository, c, "id", &user); err != nil {
 		return
 	}
 
